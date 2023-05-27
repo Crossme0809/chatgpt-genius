@@ -10,7 +10,7 @@ import { ClockLoader } from 'react-spinners';
 
 const promptList = [
   {
-      name: "AI assistant",
+      name: "AI助手",
       request : {
         model: "text-davinci-003",
         prompt: "",
@@ -23,7 +23,7 @@ const promptList = [
       }
   },
   {
-      name: "English to other languages",
+      name: "英文翻译",
       request: {
         model: "text-davinci-003",
         prompt: "",
@@ -35,7 +35,7 @@ const promptList = [
       }
   },
   {
-      name: "Image generator",
+      name: "图像生成",
       request: {
         prompt: "",
         n: 1,
@@ -45,33 +45,33 @@ const promptList = [
 ]
 export {promptList}; 
 
-// Generate instruction prompt
+// 生成指令提示词
 function generateInstructionPrompt(userInput, currentPrompt) {
   let instructionPrompt = ``;
   switch (currentPrompt) {
     case promptList[0].name:
-         instructionPrompt = `The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.
-         \nHuman: Hello, who are you?
-         \nAI: I am an AI created by OpenAI. How can I help you today?
-         \nHuman: ${userInput}
+         instructionPrompt = `以下是与AI助手的对话。该助手很有帮助性、创造性、聪明并且非常友善。
+         \n人类：你好，你叫什么名字？
+         \nAI：我是由OpenAI创建的AI。我今天能为您做些什么？
+         \n人类：${userInput}
          \nAI:`
          break;
     case promptList[1].name:
-        instructionPrompt = `Translate this into four languages 1. French, 2. Spanish, 3. Japanese and 4. Malay:\n\n${userInput}\n\n`
+        instructionPrompt = `将这个翻译成四种语言：1. 中文，2. 西班牙语，3. 日语和4. 马来语:\n\n${userInput}\n\n`
         break;
     case promptList[2].name:
         instructionPrompt = `${userInput}`
         break;
     default: 
-    instructionPrompt = `The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.
-    \n\nHuman: Hello, who are you?
-    \nAI: I am an AI created by OpenAI. How can I help you today?
-    \nHuman: ${userInput}`
+    instructionPrompt = `以下是与AI助手的对话。该助手很有帮助性、创造性、聪明并且非常友善。
+    \n人类：你好，你叫什么名字？
+    \nAI：我是由OpenAI创建的AI。我今天能为您做些什么？
+    \n人类：${userInput}`
   }
   return instructionPrompt;
 }
 
-// Generate body
+// 生成API接口body
 function generateBody(currentPrompt, messages, userInput, tempMessages, instructionPrompt) { 
   let body = "";
   switch(currentPrompt) {
@@ -89,33 +89,33 @@ function generateBody(currentPrompt, messages, userInput, tempMessages, instruct
   return body
 }
 
-// To generate placeholder
+// 生成占位符提示信息
 function generatePlaceholder(currentPrompt) { 
   switch(currentPrompt) {
     case promptList[0].name:
-      return "Start chatting"
+      return "开始聊天"
     case promptList[1].name:
-      return "Insert any text you want to translate into French,Spanish,Japanese and Malay: "
+      return "将需要翻译成中文、西班牙语、日语和马来语的任何文本插入："
     case promptList[2].name:
-      return "Insert your prompt to generate image:"
+      return "请告诉我你想要生成的图片的主题或描述。"
     default:
-      return "Start chatting."
+      return "开始聊天"
   }
 }
 
 export default function Home() {
-  // loading useState
+  // 加载 useState
   const [loading, setLoading] = useState(false);
-  // Save and set conversation
+  // 保存和设置对话
   const [messages, setMessages] = useState([]);
-  // Save and set current prompt
-  const [currentPrompt, setCurrentPrompt] = useState(`AI assistant`);
-  // Save and set userinput
+  // 保存和设置当前Prompt
+  const [currentPrompt, setCurrentPrompt] = useState(`AI助手`);
+  // 保存和设置用户输入
   const [userInput,setUserInput] = useState("");
-  // Message type
+  // 消息类型
   const messageType = {me: "me", openAI: "openAI"};
 
-  // Scroll the chat container to the bottom
+  // 将聊天窗口滚动到底部
   useEffect(() => {
     scroll.scrollToBottom({
         containerId: "chat",
@@ -123,33 +123,33 @@ export default function Home() {
       });
   }, [messages])
 
-  // Set a new chat
+  // 开始一个新的聊天会话
   function clearChat() {
     setMessages([]);
   }
 
-  // Set prompt
+  // 设置Prompt
   function setPrompt(event) {
     event.preventDefault();
     clearChat();
     setCurrentPrompt(event.target.value);
   }
 
-  // Handle submit 
+  // 处理请求提交
   async function submit(event) {
     event.preventDefault();
-    // Set loading animation to true
+    // 设置加载动画
     setLoading(true);
-    // Get instruction prompt
+    // 获取指令提示
     const instructionPrompt = generateInstructionPrompt(userInput, currentPrompt)
-    // Temporary message
+    // 临时信息
     let tempMessages = [...messages, {user: `${messageType.me}`, message: `${userInput}`}];
-    // Put the userInput in the messages
+    // 把用户输入放到消息中
     setMessages(tempMessages);
-    // Clear user input
+    // 清除用户输入
     setUserInput("");
 
-    // Call the API
+    // 调用OpenAI API接口
     try {
       const response = await fetch("api/generate",{
         method: "POST",
@@ -159,19 +159,19 @@ export default function Home() {
         body: generateBody(currentPrompt, messages, userInput, tempMessages, instructionPrompt)
       });
       
-      // If we get unsuccessful response
+      // 如果我们得到不成功的响应
       const data = await response.json();
       if (response.status !== 200) {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
       setMessages([...tempMessages, {user: messageType.openAI, message: `${data.openAI && data.openAI.trimStart()}`, image: data.image }]);
-      // Set loading animation to false
+      // 设置加载动画为false
       setLoading(false);
     } 
     catch (error) {
-      // Set loading animation to false
+      // 将加载动画设置为false
       setLoading(false);
-      // Consider implementing your own error handling logic here
+      // 考虑在这里实现你自己的错误处理逻辑
       console.error(error);
       alert(error.message);
     }
@@ -181,7 +181,7 @@ export default function Home() {
     <>
       {/* Head */} 
       <Head>
-          <title>ChatGPT</title>
+          <title>ChatGPT-Genius</title>
       </Head>
       {/* Main */}
       <div className={`w-full min-h-full ${custombg.customBg}`}>
@@ -196,14 +196,14 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
                     </svg>
                     <h2 className="text-sm px-1">
-                        New chat
+                        开始新话题
                     </h2>
                 </div>
               </div>
               {/* Prompts */}
               <div>
                   <h2 className="text-sm px-2 py-1 text-gray-100">
-                        Prompt options:
+                        提示词选项:
                   </h2>
                   <div className="p-1 flex justify-center">
                     <select onChange={setPrompt} className="form-select appearance-none
